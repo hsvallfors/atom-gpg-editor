@@ -3,7 +3,7 @@
   :description "An Atom plugin for reading and editing GPG files."
 
   :license {:name "MIT Licence"
-            :url "https://github.com/keiter/atom-gpg-editor/blob/master/LICENCE.md"}
+            :url "https://github.com/keiter/atom-gpg-editor/blob/master/LICENSE.md"}
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.170"]
