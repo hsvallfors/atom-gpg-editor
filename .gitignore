@@ -1,4 +1,8 @@
 .DS_Store
 npm-debug.log
-target/
-.lein-repl-history
+/target/
+/.lein-repl-history
+
+# ignore everything in lib except the JS file
+!/lib/atom-gpg-editor.js
+/lib/

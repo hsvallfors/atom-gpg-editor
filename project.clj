@@ -14,13 +14,16 @@
   :plugins [[lein-cljsbuild "1.1.1"]]
 
   :source-paths ["src"]
+  :clean-targets [:output-dir]
 
   :cljsbuild
    {:builds
      {:main
        {:source-paths ["src"]
         :compiler
-         {:output-to "./lib/atom-gpg-editor.js"
+         {:output-dir "lib/"
+          :output-to "lib/atom-gpg-editor.js"
+          :source-map "lib/atom-gpg-editor.js.map"
           :optimizations :simple
           :target :nodejs
           :pretty-print true}}}})
