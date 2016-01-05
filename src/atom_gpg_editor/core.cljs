@@ -1,16 +1,28 @@
 (ns atom-gpg-editor.core
-    (:require [dommy.core :as dommy :refer-macros [sel1]]
-              [hipo.core :as hipo]))
+    (:require [hipo.core :as hipo]))
+
+(def panel (atom nil))
+
+(defn remove-panel!
+  []
+  (do
+    (.destroy @panel)
+    (reset! panel nil)))
+
+(defn add-panel!
+  []
+  (->>  (hipo/create [:div#hello-world "Hello World!"])
+        (js-obj "item")
+        (js/atom.workspace.addModalPanel)
+        (reset! panel)))
 
 (defn activate
   []
-  (dommy/append!
-    (sel1 :body)
-    (hipo/create [:div#hello-world "Hello World!"])))
+  (add-panel!))
 
 (defn deactivate
   []
-  (dommy/remove! (sel1 :#hello-world)))
+  (remove-panel!))
 
 (set! js/module.exports
   (js-obj "activate" activate

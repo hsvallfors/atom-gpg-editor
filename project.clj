@@ -8,8 +8,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.170"]
                  [lein-cljsbuild "1.1.1"]
-                 [hipo "0.5.1"]
-                 [prismatic/dommy "1.1.0"]]
+                 [hipo "0.5.1"]]
 
   :plugins [[lein-cljsbuild "1.1.1"]]
 
