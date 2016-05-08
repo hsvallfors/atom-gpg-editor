@@ -1,25 +1,37 @@
-(ns atom-gpg-editor.core
-  (:require [hipo.core :as hipo]))
+(ns atom-gpg-editor.core)
 
 (def observers
-  (atom ()))
+  (atom []))
+
+(defn add-observer!
+  [obs]
+  (swap! observers conj obs))
+
+(defn dispose-observers!
+  []
+  (doall (map #(.dispose %) @observers)))
 
 (defn atom-confirm!
   [message]
   (.confirm js/atom (js-obj "message" message)))
 
-(defn text-editor-observer
+(defn will-save-buffer
+  [text-buffer]
+  (atom-confirm! "You will save a text buffer!"))
+
+(defn created-text-editor
   [editor]
-  (atom-confirm! "You opened a file!"))
+  (atom-confirm! "You opened a file!")
+  (add-observer! (.. editor getBuffer (onWillSave will-save-buffer))))
 
 (defn activate
   []
   (atom-confirm! "Hello World!")
-  (swap! observers conj (js/atom.workspace.observeTextEditors text-editor-observer)))
+  (add-observer! (js/atom.workspace.observeTextEditors created-text-editor)))
 
 (defn deactivate
   []
-  (doall (map #(.dispose %) @observers)))
+  (dispose-observers!))
 
 (set! js/module.exports
   (js-obj "activate" activate
