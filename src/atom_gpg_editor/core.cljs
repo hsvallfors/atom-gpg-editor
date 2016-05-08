@@ -1,28 +1,25 @@
 (ns atom-gpg-editor.core
-    (:require [hipo.core :as hipo]))
+  (:require [hipo.core :as hipo]))
 
-(def panel (atom nil))
+(def observers
+  (atom ()))
 
-(defn remove-panel!
-  []
-  (do
-    (.destroy @panel)
-    (reset! panel nil)))
+(defn atom-confirm!
+  [message]
+  (.confirm js/atom (js-obj "message" message)))
 
-(defn add-panel!
-  []
-  (->>  (hipo/create [:div#hello-world "Hello World!"])
-        (js-obj "item")
-        (js/atom.workspace.addModalPanel)
-        (reset! panel)))
+(defn text-editor-observer
+  [editor]
+  (atom-confirm! "You opened a file!"))
 
 (defn activate
   []
-  (add-panel!))
+  (atom-confirm! "Hello World!")
+  (swap! observers conj (js/atom.workspace.observeTextEditors text-editor-observer)))
 
 (defn deactivate
   []
-  (remove-panel!))
+  (doall (map #(.dispose %) @observers)))
 
 (set! js/module.exports
   (js-obj "activate" activate
