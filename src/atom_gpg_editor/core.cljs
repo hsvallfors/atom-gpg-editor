@@ -1,4 +1,5 @@
-(ns atom-gpg-editor.core)
+(ns atom-gpg-editor.core
+  (:require [clojure.string :as string]))
 
 (def observers
   (atom []))
@@ -21,12 +22,12 @@
 
 (defn created-text-editor
   [editor]
-  (atom-confirm! "You opened a file!")
-  (add-observer! (.. editor getBuffer (onWillSave will-save-buffer))))
+  (when (string/ends-with? (.getPath editor) ".gpg")
+    (atom-confirm! "You opened a GPG file!")
+    (add-observer! (.. editor getBuffer (onWillSave will-save-buffer)))))
 
 (defn activate
   []
-  (atom-confirm! "Hello World!")
   (add-observer! (js/atom.workspace.observeTextEditors created-text-editor)))
 
 (defn deactivate
