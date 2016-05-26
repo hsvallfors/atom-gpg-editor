@@ -1,15 +1,7 @@
 (ns atom-gpg-editor.core
-  (:require [clojure.string :as string]
-            [cljs.nodejs :as nodejs]))
-
-(defn parse-process-object
-  [process-object]
-  {:stdout (-> process-object .-stdout .toString)
-   :stderr (-> process-object .-stderr .toString)
-   :status (.-status process-object)
-   :success? (-> process-object .-status (= 0))})
-
-(def spawn! (.-spawnSync (nodejs/require "child_process")))
+  (:require
+    [atom-gpg-editor.child_process :as child]
+    [clojure.string :as string]))
 
 (def observers
   (atom []))
@@ -28,7 +20,9 @@
 
 (defn will-save-buffer
   [text-buffer]
-  (-> (spawn! "date") parse-process-object pr-str atom-confirm!))
+  (->
+    (child/spawn! "gpg" ["--help"])
+    :stdout string/split-lines first atom-confirm!))
 
 (defn created-text-editor
   [editor]
