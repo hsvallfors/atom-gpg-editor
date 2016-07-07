@@ -5,25 +5,13 @@
     [hipo.core :as hipo]
     [dommy.core :as dommy]))
 
-(def observers
-  (atom []))
-
-(def panel
-  (atom nil))
-
-(defn add-observer!
-  [obs]
-  (swap! observers conj obs))
-
-(defn dispose-observers!
-  []
-  (doall (map #(.dispose %) @observers)))
-
-(defn dispose-panel!
-  []
-  (when @panel
-    (.destroy @panel)
-    (reset! panel nil)))
+(def state
+  (atom
+    {:panel nil
+     :mini-editor nil
+     :will-save-buffer-obs nil
+     :created-text-editor-obs nil
+     :gpg-password nil}))
 
 (defn atom-confirm!
   [message]
@@ -35,33 +23,70 @@
     (child/spawn! "gpg" ["--help"])
     :stdout string/split-lines first atom-confirm!))
 
-(def gpg-cancel dispose-panel!)
+(defn save-password!
+  []
+  (swap! state
+    (fn [state]
+      (if (:mini-editor state)
+        (assoc state :gpg-password (-> state :mini-editor .getText))
+        state))))
 
-(defn gpg-confirm
-  [mini-editor]
-  (atom-confirm! (str "Password was " (.getText mini-editor))))
+(defn fill-password!
+  []
+  (swap! state
+    (fn [state]
+      (when (and (:mini-editor state) (:gpg-password state))
+        (.setText (:mini-editor state) (:gpg-password state)))
+      state)))
+
+(defn dispose-panel!
+  []
+  (save-password!)
+  (swap! state
+    (fn [state]
+      (if-not (:panel state)
+        state
+        (do
+          (.destroy (:panel state))
+          (.dispose (:will-save-buffer-obs state))
+          (assoc state
+            :panel nil
+            :mini-editor nil
+            :will-save-buffer-obs nil))))))
+
+(defn add-panel!
+  [editor]
+  (let [mini-editor
+          (-> {:mini true :placeholderText "GPG Password"}
+              clj->js
+              js/atom.workspace.buildTextEditor)
+        panel-div (hipo/create [:div.atom-gpg-editor])]
+    (dommy/append! panel-div (js/atom.views.getView mini-editor))
+    ; FIXME hide password input
+    (dispose-panel!)
+    (swap! state assoc
+      :mini-editor mini-editor
+      :will-save-buffer-obs (.. editor getBuffer (onWillSave will-save-buffer))
+      :panel (->> {:item panel-div} clj->js js/atom.workspace.addModalPanel))
+    (fill-password!)
+    (js/atom.commands.add panel-div "core:confirm" save-password!)
+    (js/atom.commands.add panel-div "core:cancel" dispose-panel!)))
 
 (defn created-text-editor
   [editor]
-  (when (string/ends-with? (.getPath editor) ".gpg")
-    (let [mini-editor (-> {:mini true :placeholderText "GPG Password"}
-                          clj->js
-                          js/atom.workspace.buildTextEditor)
-          panel-div (hipo/create [:div.atom-gpg-editor])]
-      (dommy/append! panel-div (js/atom.views.getView mini-editor))
-      ; FIXME hide password input
-      (->> {:item panel-div} clj->js js/atom.workspace.addModalPanel (reset! panel))
-      (js/atom.commands.add panel-div "core:confirm" #(gpg-confirm mini-editor))
-      (js/atom.commands.add panel-div "core:cancel" #(gpg-cancel))
-      (add-observer! (.. editor getBuffer (onWillSave will-save-buffer))))))
+  (if-let [path (.getPath editor)]
+    (when (string/ends-with? path ".gpg")
+      (add-panel! editor))))
 
 (defn activate
   []
-  (add-observer! (js/atom.workspace.observeTextEditors created-text-editor)))
+  (swap! state assoc
+    :created-text-editor-obs
+    (js/atom.workspace.observeTextEditors created-text-editor)))
 
 (defn deactivate
   []
-  (dispose-observers!)
+  (.dispose (:created-text-editor-obs @state))
   (dispose-panel!))
 
 (set! js/module.exports
