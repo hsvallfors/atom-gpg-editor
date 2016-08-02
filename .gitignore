@@ -7,4 +7,5 @@ npm-debug.log
 /target/
 /.lein-repl-history
 *.gpg
+*.pgp
 .nrepl-port

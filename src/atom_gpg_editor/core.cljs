@@ -8,6 +8,7 @@
 (def state
   (atom
     {:panel nil
+     :editor nil
      :mini-editor nil
      :will-save-buffer-obs nil
      :created-text-editor-obs nil
@@ -17,11 +18,9 @@
   [message]
   (.confirm js/atom (clj->js {:message message})))
 
-(defn will-save-buffer
-  [text-buffer]
-  (->
-    (child/spawn! "gpg" ["--help"])
-    :stdout string/split-lines first atom-confirm!))
+(defn atom-error!
+  [message detail]
+  (.addError js/atom.notifications message (clj->js {:dismissable true :detail detail})))
 
 (defn save-password!
   []
@@ -39,6 +38,17 @@
         (.setText (:mini-editor state) (:gpg-password state)))
       state)))
 
+(defn will-save-buffer
+  [text-buffer])
+
+(defn decrypt-file!
+  []
+  (save-password!)
+  (let [gpg-result (child/spawn! "gpg" ["--decrypt" "--batch" "--passphrase-fd" 0 (-> @state :editor .getPath)] (:gpg-password @state))]
+    (if (:success? gpg-result)
+      (.setText (:editor @state) (:stdout gpg-result))
+      (atom-error! "GPG decrypt could not be run" (:stderr gpg-result)))))
+
 (defn dispose-panel!
   []
   (save-password!)
@@ -52,6 +62,7 @@
           (assoc state
             :panel nil
             :mini-editor nil
+            :editor nil
             :will-save-buffer-obs nil))))))
 
 (defn add-panel!
@@ -65,11 +76,12 @@
     ; FIXME hide password input
     (dispose-panel!)
     (swap! state assoc
+      :editor editor
       :mini-editor mini-editor
       :will-save-buffer-obs (.. editor getBuffer (onWillSave will-save-buffer))
       :panel (->> {:item panel-div} clj->js js/atom.workspace.addModalPanel))
     (fill-password!)
-    (js/atom.commands.add panel-div "core:confirm" save-password!)
+    (js/atom.commands.add panel-div "core:confirm" decrypt-file!)
     (js/atom.commands.add panel-div "core:cancel" dispose-panel!)))
 
 (defn created-text-editor
