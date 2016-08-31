@@ -11,6 +11,6 @@
    :success? (-> process-object .-status (= 0))})
 
 (defn spawn!
-  [command args input]
+  [command args]
   (parse-process-object
-    (spawnSync command (clj->js args) (clj->js {:input input}))))
+    (spawnSync command (clj->js args))))
