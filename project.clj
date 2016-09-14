@@ -7,7 +7,8 @@
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.170"]
-                 [lein-cljsbuild "1.1.1"]]
+                 [lein-cljsbuild "1.1.1"]
+                 [philoskim/debux "0.2.1"]]
 
   :plugins [[lein-cljsbuild "1.1.1"]]
 
