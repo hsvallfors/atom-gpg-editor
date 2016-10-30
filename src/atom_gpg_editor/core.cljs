@@ -6,8 +6,7 @@
 
 (def state
   (atom
-     {:created-text-editor-obs nil
-      :will-save-buffer-obs nil}))
+     {:created-text-editor-obs nil}))
 
 (defn atom-confirm!
   [message]
@@ -45,8 +44,7 @@
             (child/spawn-with-stdin! "gpg" (.getText editor)))]
       (if-not (:success? gpg-result)
         (atom-error! "GPG encrypt could not be run" (:stderr gpg-result)))
-      (.destroy editor)
-      (throw (js/Error "aborting plaintext save")))))
+      (.destroy editor))))
 
 (defn decrypt-file!
   [editor]
@@ -55,31 +53,42 @@
       (.setText editor (:stdout gpg-result))
       (atom-error! "GPG decrypt could not be run" (:stderr gpg-result)))))
 
+(defn is-gpg-file?
+  [path]
+  (let [gpg-extensions ["gpg" "pgp"]]
+    (some #(string/ends-with? path %) gpg-extensions)))
+
 (defn created-text-editor
   [editor]
-  (if-let [path (.getPath editor)]
-    (when (string/ends-with? path ".gpg")
-      (swap! state assoc
-        :will-save-buffer-obs
-        (.. editor getBuffer (onWillSave #(encrypt-file! editor))))
-      (decrypt-file! editor))))
+  (when (is-gpg-file? (.getPath editor))
+    (decrypt-file! editor)))
+
+(defn encrypt
+  []
+  (let [editor (js/atom.workspace.getActiveTextEditor)
+        path (.getPath editor)]
+    ; Do a regular save if file is not a GPG file, since this hijacks Ctrl+S.
+    (if (is-gpg-file? path)
+      (encrypt-file! editor)
+      (.save editor))))
 
 (defn activate
   []
   (swap! state assoc
     :created-text-editor-obs
-    (js/atom.workspace.observeTextEditors created-text-editor)))
+    (js/atom.workspace.observeTextEditors created-text-editor))
+  (js/atom.commands.add "atom-workspace" "atom-gpg-editor:encrypt" encrypt))
 
 (defn deactivate
   []
-  (.dispose (:created-text-editor-obs @state))
-  (.dispose (:will-save-buffer-obs @state)))
+  (.dispose (:created-text-editor-obs @state)))
 
 (set! js/module.exports
   (clj->js
     {:activate activate
      :deactivate deactivate
-     :serialize (constantly nil)}))
+     :serialize (constantly nil)
+     :encrypt encrypt}))
 
 ;; noop - needed for :nodejs CLJS build
 (set! *main-cli-fn* (constantly nil))
