@@ -54,21 +54,20 @@
       (atom-error! "GPG decrypt could not be run" (:stderr gpg-result)))))
 
 (defn is-gpg-file?
-  [path]
-  (let [gpg-extensions ["gpg" "pgp"]]
-    (some #(string/ends-with? path %) gpg-extensions)))
+  [editor]
+  (if-let [path (.getPath editor)]
+    (some #(string/ends-with? path %) ["gpg" "pgp"])))
 
 (defn created-text-editor
   [editor]
-  (when (is-gpg-file? (.getPath editor))
+  (when (is-gpg-file? editor)
     (decrypt-file! editor)))
 
 (defn encrypt
   []
-  (let [editor (js/atom.workspace.getActiveTextEditor)
-        path (.getPath editor)]
+  (if-let [editor (js/atom.workspace.getActiveTextEditor)]
     ; Do a regular save if file is not a GPG file, since this hijacks Ctrl+S.
-    (if (is-gpg-file? path)
+    (if (is-gpg-file? editor)
       (encrypt-file! editor)
       (.save editor))))
 
