@@ -8,9 +8,9 @@
   (atom
      {:created-text-editor-obs nil}))
 
-(defn atom-confirm!
-  [message]
-  (.confirm js/atom (clj->js {:message message})))
+(defn atom-info!
+  [message description]
+  (.addInfo js/atom.notifications message (clj->js {:dismissable true :description description})))
 
 (defn atom-error!
   [message detail]
@@ -42,7 +42,8 @@
             (concat ["--encrypt" "--output" (.getPath editor) "--trust-model" "always" "--batch" "--yes"])
             (into [])
             (child/spawn-with-stdin! "gpg" (.getText editor)))]
-      (if-not (:success? gpg-result)
+      (if (:success? gpg-result)
+        (atom-info! "File encrypted!" "Your file was encrypted and saved succcessfully.")
         (atom-error! "GPG encrypt could not be run" (:stderr gpg-result)))
       (.destroy editor))))
 
@@ -50,7 +51,9 @@
   [editor]
   (let [gpg-result (child/spawn! "gpg" ["--decrypt" "--batch" "--yes" (.getPath editor)])]
     (if (:success? gpg-result)
-      (.setText editor (:stdout gpg-result))
+      (do
+        (.setText editor (:stdout gpg-result))
+        (atom-info! "File decrypted!" "You are editing the plain text contents of your file. It will be encrypted before being saved."))
       (atom-error! "GPG decrypt could not be run" (:stderr gpg-result)))))
 
 (defn is-gpg-file?
