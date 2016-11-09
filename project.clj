@@ -20,9 +20,7 @@
      {:main
        {:source-paths ["src"]
         :compiler
-         {:output-dir "lib/"
-          :output-to "lib/atom-gpg-editor.js"
-          :source-map "lib/atom-gpg-editor.js.map"
-          :optimizations :simple
+         {:output-to "lib/atom-gpg-editor.js"
+          :optimizations :advanced
           :target :nodejs
-          :pretty-print true}}}})
+          :pretty-print false}}}})

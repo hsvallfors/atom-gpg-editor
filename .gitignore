@@ -1,7 +1,3 @@
-# ignore everything in lib except the JS file
-!/lib/atom-gpg-editor.js
-/lib/
-
 .DS_Store
 npm-debug.log
 /target/
