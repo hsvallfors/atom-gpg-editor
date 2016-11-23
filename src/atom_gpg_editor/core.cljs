@@ -1,8 +1,7 @@
 (ns atom-gpg-editor.core
   (:require
     [atom-gpg-editor.child_process :as child]
-    [clojure.string :as string]
-    [debux.cs.core :refer-macros [clog]]))
+    [clojure.string :as string]))
 
 (def state
   (atom
