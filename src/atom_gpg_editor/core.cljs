@@ -52,6 +52,8 @@
     (if (:success? gpg-result)
       (do
         (.setText editor (:stdout gpg-result))
+        ; Prevent Atom from asking if you want to save tab contents
+        (set! (.-isModified (.getBuffer editor)) (constantly false))
         (atom-info! "File decrypted!" "You are editing the plain text contents of your file. It will be encrypted before being saved."))
       (atom-error! "GPG decrypt could not be run" (:stderr gpg-result)))))
 
@@ -89,8 +91,10 @@
   (clj->js
     {:activate activate
      :deactivate deactivate
-     :serialize (constantly nil)
-     :save-hook save-hook}))
+     :serialize (constantly nil)}))
 
 ;; noop - needed for :nodejs CLJS build
 (set! *main-cli-fn* (constantly nil))
+
+;; debug printing
+(enable-console-print!)
