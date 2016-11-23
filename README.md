@@ -1,8 +1,7 @@
 # atom-gpg-editor
 
-An Atom plugin for reading and editing GPG files.
-
-FIXME: examples of usage
+An Atom plugin for reading and editing GPG files. Just open a GPG file in Atom
+and you can edit it in plain text.
 
 ## Installation
 
