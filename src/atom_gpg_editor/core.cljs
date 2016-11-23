@@ -66,20 +66,21 @@
   (when (is-gpg-file? editor)
     (decrypt-file! editor)))
 
-(defn encrypt
-  []
-  (if-let [editor (js/atom.workspace.getActiveTextEditor)]
-    ; Do a regular save if file is not a GPG file, since this hijacks Ctrl+S.
-    (if (is-gpg-file? editor)
-      (encrypt-file! editor)
-      (.save editor))))
+(defn save-hook
+  [event]
+  (if-let [editor (js/atom.workspace.getActivePaneItem)]
+    ; Listen to file save events and hijack the flow if it is a GPG file.
+    (when (is-gpg-file? editor)
+      (.preventDefault event)
+      (.stopPropagation event)
+      (encrypt-file! editor))))
 
 (defn activate
   []
   (swap! state assoc
     :created-text-editor-obs
     (js/atom.workspace.observeTextEditors created-text-editor))
-  (js/atom.commands.add "atom-workspace" "atom-gpg-editor:encrypt" encrypt))
+  (js/atom.commands.add "atom-workspace" "core:save" save-hook))
 
 (defn deactivate
   []
@@ -90,7 +91,7 @@
     {:activate activate
      :deactivate deactivate
      :serialize (constantly nil)
-     :encrypt encrypt}))
+     :save-hook save-hook}))
 
 ;; noop - needed for :nodejs CLJS build
 (set! *main-cli-fn* (constantly nil))

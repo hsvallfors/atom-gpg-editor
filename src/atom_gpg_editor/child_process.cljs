@@ -1,6 +1,5 @@
 (ns atom-gpg-editor.child_process
-  (:require [cljs.nodejs :as nodejs]
-            [debux.cs.core :refer-macros [clog]]))
+  (:require [cljs.nodejs :as nodejs]))
 
 (def ^:private spawnSync (.-spawnSync (nodejs/require "child_process")))
 
