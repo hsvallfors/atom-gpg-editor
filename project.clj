@@ -1,4 +1,4 @@
-(defproject atom-gpg-editor "0.1.0"
+(defproject atom-gpg-editor "0.0.0"
 
   :description "An Atom plugin for reading and editing GPG files."
 

@@ -1,7 +1,7 @@
 {
   "name": "atom-gpg-editor",
   "main": "./lib/atom-gpg-editor.js",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "An Atom plugin for reading and editing GPG files.",
   "repository": "https://github.com/keiter/atom-gpg-editor",
   "license": "MIT",
