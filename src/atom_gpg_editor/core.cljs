@@ -17,7 +17,7 @@
 
 (defn get-gpg-recipients!
   [path]
-  (let [short-sha-regexp #", ID ([A-Z\d]{8}),"
+  (let [short-sha-regexp #", ID ([A-Z\d]+),"
         gpg-result
           (child/spawn! "gpg"
             ["--list-only" "--no-default-keyring" "--batch" "--yes" "--secret-keyring" "/dev/null" path])]
